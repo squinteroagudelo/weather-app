@@ -1,12 +1,17 @@
 require("dotenv").config();
 
-require("colors");
-const { readInput, inquirerMenu, pause } = require("./helpers/inquirer");
+const colors = require("colors");
+const {
+    readInput,
+    inquirerMenu,
+    pause,
+    listPlaces,
+} = require("./helpers/inquirer");
 const Search = require("./models/search");
 
 const main = async() => {
     const search = new Search();
-    let option = 0;
+    let option;
 
     do {
         option = await inquirerMenu();
@@ -18,19 +23,32 @@ const main = async() => {
 
                 // Search list of matching places
                 const cities = await search.searchCity(city);
-                console.log(cities);
+                const id = await listPlaces(cities);
+                if (id !== 0) {
+                    const citySel = cities.find((city) => city.id === id);
 
-                // Select a place
+                    search.addHistory(citySel.name);
 
-                // Show city information
-                console.log("\nInformación de la cuidad\n".green);
-                console.log("Cuidad:");
-                console.log("Lat:");
-                console.log("Lng:");
-                console.log("Temperatura:");
-                console.log("Mínima");
-                console.log("Máxima:");
+                    const weather = await search.weatherCity(
+                        citySel.lat,
+                        citySel.lng
+                    );
 
+                    // Show city information
+                    console.log("\nInformación de la cuidad\n".green);
+                    console.log("Cuidad:", citySel.name);
+                    console.log("Lat:", citySel.lat);
+                    console.log("Lng:", citySel.lng);
+                    console.log("Temperatura:", weather.temp);
+                    console.log("Mínima", weather.max);
+                    console.log("Máxima:", weather.min);
+                    console.log("Descripción:", weather.desc);
+                }
+                break;
+            case 2:
+                search.capitalizedHistory.forEach((city, i) =>
+                    console.log(`${colors.green(i + 1)}${".".green} ${city}`)
+                );
                 break;
         }
 
